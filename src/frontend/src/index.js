@@ -1,10 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
 import App from './App';
+import { createHash } from 'crypto';
+import { createRoot } from 'react-dom/client';
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+const domNode = document.getElementById('root');
+const root = createRoot(domNode);
+root.render(<App />);
