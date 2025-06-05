@@ -73,11 +73,47 @@ function App() {
         }
     ]);
 
-    return (
-        <div className="app-container">
-            <RouterProvider router={router} />
-        </div>
-    );
+    const loggedOutRouter = createHashRouter([
+        {
+            path: '/',
+            element: <Login setLoggedIn={x => setLoggedIn(x)}/>,
+        },
+        {
+            path: '/register',
+            element: <Registration />,
+        },
+        {
+            path: '*',
+            element: <NotFound />,
+        }
+    ]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const data = await getUser();
+            if (data === undefined) setLoggedIn(false);
+            else { setLoggedIn(true); setUserData(data); }
+        }
+    }, []);
+
+    function logout() {
+        fetch(`${URL}:${SERVER_PORT}/auth/out`, { method: 'POST', credentials: 'include' });
+        setLoggedIn(false);
+    }
+
+    if (loggedIn) {
+        return (
+            <div className="app-container">
+                <RouterProvider router={router} />
+            </div>
+        );
+    } else {
+        return (
+            <div className="app-container">
+                <RouterProvider router={loggedOutRouter} />
+            </div>
+        )
+    }
 }
 
 export default App;
