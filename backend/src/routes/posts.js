@@ -16,8 +16,7 @@ router.get('/', (request, response) => {
             if (error) throw error;
             response.status(200).json(results.rows[0]);
         });
-    }
-    else if (user_id !== undefined) {
+    } else if (user_id !== undefined) {
         pool.query('SELECT * FROM posts WHERE user_id = $1', [user_id], (error, results) => {
             if (error) throw error;
             response.status(200).json(results.rows);
@@ -29,8 +28,7 @@ router.get('/', (request, response) => {
             if (error) throw error;
             response.status(200).json(results.rows);
     });
-    }
-    else {
+    } else {
         pool.query('SELECT * FROM posts OFFSET (SELECT count(*) FROM posts)-10', [], (error, results) => { // TODO: allow for multiple pages
             if (error) throw error;
             response.status(200).json(results.rows.reverse());
@@ -39,26 +37,25 @@ router.get('/', (request, response) => {
 });
 
 /*
-Create a poll and add to the `polls` table.
+Create a post and add to the `posts` table.
 */
 router.post('/', (request, response) => {
     const { user_id, title, content, creation_date, community_id } = request.body;
     const post_id = uuid();
     pool.query('INSERT INTO posts (user_id, title, content, creation_date, community_id, post_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [user_id, title, content, creation_date, community_id, post_id], (error, results) => {
         if (error) throw error;
-        response.status(200).json({ post_id: post_id });
+        response.status(200).json(results.rows);
     });
 });
 
 /*
-Delete a given poll.
+Delete a given post.
 */
 router.delete('/', (request, response) => {
-    const post_id = request.query["post_id"];
+    const post_id = request.query['post_id'];
     if (post_id === undefined) {
         response.status(404).json(request.query);
-    }
-    else {
+    } else {
         pool.query('DELETE FROM posts WHERE post_id = $1', [post_id], (error, results) => {
             if (error) throw error;
             response.status(200).json(request.body);
