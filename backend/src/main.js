@@ -9,9 +9,9 @@ const cors = require('cors');
 const usersRouter = require(path.join(__dirname, 'routes/users.js'));
 const postsRouter = require(path.join(__dirname, 'routes/posts.js'));
 const loginRouter = require(path.join(__dirname, 'routes/logins.js'));
-const communitiesRouter = require(path.join(__dirname, 'routes/commmunities.js'));
+const communitiesRouter = require(path.join(__dirname, 'routes/communities.js'));
 const commentsRouter = require(path.join(__dirname, 'routes/comments.js'));
-const subscriptionssRouter = require(path.join(__dirname, 'routes/subscriptions.js'));
+const subscriptionsRouter = require(path.join(__dirname, 'routes/subscriptions.js'));
 
 const app = express();
 
@@ -42,7 +42,7 @@ app.use(cors({
 }));
 
 app.use('/users', usersRouter);
-app.use('/posts', pollsRouter);
+app.use('/posts', postsRouter);
 app.use('/auth', loginRouter);
 app.use('/communities', communitiesRouter);
 app.use('/comments', commentsRouter);

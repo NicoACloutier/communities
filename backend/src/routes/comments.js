@@ -18,7 +18,7 @@ router.get('/', (request, response) => {
             response.status(200).json(results.rows[0]);
         });
     } else if (parent_id !== undefined) {
-        pool.query('SELECT * FROM comments WHERE parent_id = $1', [parent_id]. (error, results) => {
+        pool.query('SELECT * FROM comments WHERE parent_id = $1', [parent_id], (error, results) => {
             if (error) throw error;
             response.status(200).json(results.rows);
         });
