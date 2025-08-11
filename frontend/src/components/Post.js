@@ -1,67 +1,130 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import '../App.css';
 
 const SERVER_PORT = 3000;
+const URL = 'http://127.0.0.1';
 
-async function getComments(post_id) {
-    const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/comments?post_id=${post_id}`, { method: 'GET' });
-    return await response.json();
-}
-
-async function getSubComments(comment_id) {
-    const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/comments?comment_id=${comment_id}`, { method: 'GET' });
-    return await response.json();
-}
-
-async function getPost(post_id) {
-    const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/posts?id=${pollId}`, { method: 'GET' });
-    const data = await response.json();
-    const comments = await getComments(post_id);
-    data.comments = comments;
-    return data;
-}
-
-async function getOriginator(user_id) {
-    const response = await fetch(`http://127.0.0.1:${SERVER_PORT}/users?id=${user_id}`, { method: 'GET' });
-    return await response.json();
+function useQuery() {
+    return new URLSearchParams(useLocation().search);
 }
 
 function Post() {
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [comments, setComments] = useState([]);
-    const [user, setUser] = useState({});
-    const [originator, setOriginator] = useState({});
-    const [postId, setPostId] = useState(undefined);
-    const [ownPost, setOwnPost] = useState(false);
+    const query = useQuery();
+    const postId = query.get('id');
 
+    const [post, setPost] = useState(null);
+    const [comments, setComments] = useState([]);
+    const [commentText, setCommentText] = useState('');
+    const [error, setError] = useState('');
+
+    // Fetch post and comments
     useEffect(() => {
-        const fetchData = async () => {
-            const authResponse = await fetch(`http://127.0.0.1:${SERVER_PORT}/auth`, { method: 'GET', credentials: 'include' });
-            const authData = await authResponse.json();
-            if (authResponse.status === 200) {
-                setUser(authData);
+        async function fetchData() {
+            try {
+                const postRes = await fetch(`${URL}:${SERVER_PORT}/posts/${postId}`, {
+                    credentials: 'include',
+                });
+                if (postRes.ok) {
+                    const postData = await postRes.json();
+                    setPost(postData);
+                }
+
+                const commentsRes = await fetch(`${URL}:${SERVER_PORT}/comments?postId=${postId}`, {
+                    credentials: 'include',
+                });
+                if (commentsRes.ok) {
+                    const commentsData = await commentsRes.json();
+                    setComments(commentsData);
+                }
+            } catch (err) {
+                setError('Failed to load post or comments.');
             }
-            const id = window.location.hash.match(/poll\?p=([^&/]+)/)[1];
-            const data = await getPoll(id);
-            const entered = await getEntry(authData.id, id);
-            setOriginator(await getOriginator(data.user_id));
-            setOwnPost(data.user_id === authData.id);
-            setPostId(id);
-            setContent(data.content);
-            setTitle(data.title);
-            setComments(data.comments);
         }
-        fetchData();
-    }, []);
-    
+
+        if (postId) {
+            fetchData();
+        }
+    }, [postId]);
+
+    async function handleCommentSubmit(e) {
+        e.preventDefault();
+        if (!commentText.trim()) return;
+
+        const res = await fetch(`${URL}:${SERVER_PORT}/comments`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                postId,
+                text: commentText
+            }),
+        });
+
+        if (res.ok) {
+            const newComment = await res.json();
+            setComments([...comments, newComment]);
+            setCommentText('');
+        } else {
+            setError('Failed to post comment.');
+        }
+    }
+
+    if (!post) {
+        return (
+            <div className="app-container center">
+                <p className="muted">Loading post...</p>
+            </div>
+        );
+    }
+
     return (
         <div className="app-container">
-            <p className="post-title">{title}</p>
-            <p className="post-content">{content}</p>
-            <div className="comments">
-                <ul>{comments.map(x => <li key={x.content}>{x.content}</li>)}</ul>
+            <div className="card post">
+                <div className="vote-buttons">
+                    <button title="Like">⬆️</button>
+                    <div className="vote-count">{post.votes}</div>
+                    <button title="Dislike">⬇️</button>
+                </div>
+
+                <div className="post-content">
+                    <h2>{post.title}</h2>
+                    <div className="post-meta muted">
+                        Posted by {post.author} on {new Date(post.createdAt).toLocaleString()}
+                    </div>
+                    <p>{post.body}</p>
+                </div>
+            </div>
+
+            <div className="card">
+                <h3 className="bold">Add a Comment</h3>
+                {error && <p className="muted">{error}</p>}
+                <form onSubmit={handleCommentSubmit}>
+                    <textarea
+                        value={commentText}
+                        onChange={(e) => setCommentText(e.target.value)}
+                        rows="3"
+                        placeholder="Write your comment..."
+                    />
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+
+            <div className="card">
+                <h3 className="bold">Comments</h3>
+                {comments.length === 0 ? (
+                    <p className="muted">No comments yet.</p>
+                ) : (
+                    comments.map((comment, idx) => (
+                        <div key={idx} className="comment">
+                            <p className="bold">{comment.author}</p>
+                            <p>{comment.text}</p>
+                            <p className="muted" style={{ fontSize: '0.8rem' }}>
+                                {new Date(comment.createdAt).toLocaleString()}
+                            </p>
+                        </div>
+                    ))
+                )}
             </div>
         </div>
     );
