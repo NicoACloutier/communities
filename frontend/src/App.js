@@ -12,8 +12,8 @@ import NotFound from './components/NotFound.js';
 import Post from './components/Post.js';
 import Profile from './components/Profile.js';
 import Registration from './components/Registration.js';
-import Search from './Search.js';
-import User from './User.js';
+import Search from './components/Search.js';
+import User from './components/User.js';
 
 const SERVER_PORT = 3000;
 const URL = 'http://127.0.0.1';
