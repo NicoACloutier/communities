@@ -43,7 +43,8 @@ router.post('/', (request, response) => {
     const { name, email, enteredPassword } = request.body;
     const salt = uuid().substring(0, SALT_LENGTH);
     const hash = createHash('sha256').update(enteredPassword + salt).digest('hex');
-    pool.query('INSERT INTO users (salt, hash, email, name) VALUES ($1, $2, $3, $4) RETURNING *;', [salt, hash, email, name], (error, results) => {
+    const id = uuid();
+    pool.query('INSERT INTO users (salt, hash, email, name, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *;', [salt, hash, email, name, id], (error, results) => {
         if (error) throw error;
         response.status(200).json(results.rows)
     });
