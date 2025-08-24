@@ -22,7 +22,7 @@ async function getUser() {
     const response = await fetch(`${URL}:${SERVER_PORT}/auth`,
         { method: 'GET', credentials: 'include', },
     );
-    if (response == undefined || response.status != 200) { return undefined; }
+    if (response === undefined || response.status !== 200) { return undefined; }
     return await response.json();
 }
 
